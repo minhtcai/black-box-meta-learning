@@ -3,9 +3,9 @@
 \usepackage{float}
 \graphicspath{{/home/andrew/Desktop/CS330/hw0/multitask-recsys/images/}}
 %opening
-\title{\textbf{CS 330 Autumn 2021/2022 Homework 0}
-	{Multitask Training for Recommender Systems
-		Due Monday September 27, 11:59 PM PST}}
+\title{\textbf{CS 330 Autumn 2021 Homework 1}
+	{Data Processing and Black-Box Meta-Learning
+		Due Wednesday Octoboer 6, 11:59 PM PST}}
 
 \author{
 			\\SUNetID: tminh 
@@ -24,11 +24,11 @@
 		
 	\end{abstract}
 	
-	\section{Problem 1: Implement Multi-Task Model}
+	\section{Problem 1: Data Processing for Few-Shot Classification}
 	Implementation of multi-task more will require embedding vectors of users and items, as well as the embedding vector of biases. For sharing embedding, we will use the same embedding vectors to do two calculations in forward function, first is the interaction probability for an user and a movie, second is the score that the user would assign to a movie. For separated embedding, we need to create another set of embedding vectors for users, items, biases and use this set for either task.
 	Details will be found in "models.py".	
 	
-	\section{Problem 2: Debug Model Training}
+	\section{Problem 2:  Memory Augmented Neural Networks (MANN)}
 	The bug is the positions of "predictions" and "score" variables. The factorization loss function takes positive and negative predictions instead of score and negative prediction. In the other hand, the regression loss function takes observed ratings and predicted ratings instead of positive prediction. We just need to switch the position of these two terms to get the right result.
 	Details will be found in "multitask.py".
 	
@@ -60,6 +60,10 @@
 			\caption{Separate representations and task weights $\lambda_{F} = 0.5, \lambda_{R} = 0.5$}
 		\end{figure}	
 	\end{center}
+	
+	\section{Problem 3: Analysis}
+	
+	\section{Problem 4: Experimentation}
 	
 	\textbf{Question 1:} \par
 	From the experiment 2 and 3 where we evenly divided the weights for each loss, we observed that for the training process, both factorization loss and regression loss decreased pretty well to $loss_{F} = 0.193$ and $loss_{R} = 0.1$.
