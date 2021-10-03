@@ -66,6 +66,19 @@ class MANN(nn.Module):
         #############################
 
         # SOLUTION:
+        N = self.num_classes
+        K = self.num_samples_per_class
+        dim = self.input_size
+        
+        # for each batch, reshape images tensor to tensor of 1 * (N*(K+1)) * dim 
+        for each_batch_img in input_images:
+            each_batch_img = each_batch_img.reshape(1, N * (K+1), dim) 
+        
+        # for each batch, reshape labels tensor to tensor of 1 * (N*(K+1)) * N 
+        for each_batch_label in input_labels:
+            each_batch_label = each_batch_label.reshape(1, N * (K+1), N)
+        
+        
 
 
     def loss_function(self, preds, labels):
@@ -85,7 +98,8 @@ class MANN(nn.Module):
         #### YOUR CODE GOES HERE ####
         #############################
 
-        # SOLUTION:        
+        # SOLUTION:      
+        
 
 
 
