@@ -67,18 +67,50 @@ class MANN(nn.Module):
 
         # SOLUTION:
         N = self.num_classes
-        K = self.num_samples_per_class
+        K = self.samples_per_class
         dim = self.input_size
+        B = len(input_images)
         
-        # for each batch, reshape images tensor to tensor of 1 * (N*(K+1)) * dim 
-        for each_batch_img in input_images:
-            each_batch_img = each_batch_img.reshape(1, N * (K+1), dim) 
+        # reshape tensors to process
+        reshaped_image = input_images.reshape(B * N * (K+1), dim)
+        reshaped_label = input_labels.reshape(B * N * (K+1), N)
+        print(reshaped_image.shape) # (88, 784)
+        print(reshaped_label.shape) # (88, 4)
         
-        # for each batch, reshape labels tensor to tensor of 1 * (N*(K+1)) * N 
-        for each_batch_label in input_labels:
-            each_batch_label = each_batch_label.reshape(1, N * (K+1), N)
+        # conatenate query image with label of zeros
+        # Notes: in the previous part, we put all the query set of each character in each batch to the bottom, for each batch we have (1 * N) at the
+        # bottom of input [B, K + 1, N, 784] are the query set
+        # E.g: n = 4 classes, k = 10 ways, batch = 2, we have output shape of image batch is (2, 11, 4, 784)
+        # For first batch, if we resize the tensor to (1, 44, 784), the last three vectors of index 41, 42, 43, 44 are in the query set
+        # And if we resize tensor with both batch to (2 * 44, 784) = (88, 784) the query set is in position (41, 42, 43, 44) and (85, 86, 87, 88)
+        # That are the indexes that we need to concatenate with vector of zeros, we can start to change the labels of these indexes before concatenating
+        for i in range(len(reshaped_label)):
+            # find last set of batch label, for e.g. example above, index should be 40, 41, 42, 43 and 84, 85, 86, 87
+            if (i + 1) % (N * (K + 1)) == 0:
+                for j in range(i, i - 4, -1):
+                    reshaped_label[j] = np.zeros(N)
+
         
+        # concatenate image and label to a tensor of [B * (K+1) * N, dim + N]
+        concatenated = np.concatenate((reshaped_image, reshaped_label), axis = 1)
         
+        # reshape concatenated tensor to [B, K+1, N, dim + N]
+        concatenated = np.reshape(concatenated, (B, (K+1) * N, dim + N))
+        concatenated = torch.from_numpy(concatenated).to(torch.double)
+        
+        # use print to confirm that query label have values of zeros
+        
+        #print(concatenated[0][40][783:]) # label should be zero 
+        #print(concatenated[0][41][783:]) 
+        #print(concatenated[0][42][783:]) 
+        #print(concatenated[0][43][783:]) 
+        
+        # pass data through model and reshape output the [B, K + 1, N, N]
+        output, _ = self.layer1(concatenated)
+        output, _ = self.layer2(output)
+        output = torch.reshape(output, (B, K + 1, N, N))
+        
+        return output
 
 
     def loss_function(self, preds, labels):
@@ -98,7 +130,29 @@ class MANN(nn.Module):
         #### YOUR CODE GOES HERE ####
         #############################
 
-        # SOLUTION:      
+        # SOLUTION: 
+        
+        N = self.num_classes
+        K = self.samples_per_class
+        dim = self.input_size
+        B = len(labels)
+        
+        # Reshape two inputs into [B * (K+1) * N, N]
+        reshaped_preds = torch.reshape(preds, (B * (K+1) * N, N))
+        reshaped_labels = torch.reshape(labels, (B * (K+1) * N, N))
+        
+        # Get prediction and label from the last items, should be  last N * 1 sample
+        preds_N = reshaped_preds.detach().numpy()[(len(reshaped_preds) -  B*N):]
+        labels_N = reshaped_labels.detach().numpy()[(len(reshaped_preds) -  B*N):]
+        
+        # 8 * 4 # one-hot encoding for the label [B*N, N] and [B*N,]
+        # transfor to 8 * 1
+        labels_N = torch.argmax(torch.from_numpy(labels_N), dim = 1)
+        preds_N = torch.from_numpy(preds_N)
+        
+        output = F.cross_entropy(preds_N, labels_N)
+
+        return output    
         
 
 

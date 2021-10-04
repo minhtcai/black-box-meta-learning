@@ -138,13 +138,11 @@ class DataGenerator(object):
             # Load K+1 images per char and collect labels, using K images per class for support set and one image per class for the query class
             # Create label matrix of size N*N using identity matrix, since for each class will have it own correspondence label encoded
             labels_encoded = np.identity(N)
-            #print(labels_encoded)
-            
+
             # Collect image and labels with K+1 sample for each sampeld class, have shape
             labels_imgs = get_images(sampled_class, labels_encoded, K+1, shuffle=False) # N * (K_+ 1) 
             
             # Create tensor and load data in support and train
-            #labels_imgs_matrix = np.reshape(labels_imgs, (K + 1, N, 784))
             
             support_set = [] # K * N * dim
             query_set = [] # 1 * N * dim
@@ -159,38 +157,27 @@ class DataGenerator(object):
                 if j == test_counter:
                     query_set.append(image_file_to_array(labels_imgs[j][1], dim)) 
                     query_set_label.append(labels_imgs[j][0])
-                    #print(labels_imgs[j][1])
-                    #print(labels_imgs[j][0])
                     test_counter += (K+1)
                 else:
                     support_set.append(image_file_to_array(labels_imgs[j][1], dim))
                     support_set_label.append(labels_imgs[j][0])
-                    #print(labels_imgs[j][1])
-                    #print(labels_imgs[j][0])
-            
+
             
             # Shuffle query set only
             query_set, query_set_label = shuffle(query_set, query_set_label)
-            #support_set, support_set_label = shuffle(support_set, support_set_label)
             
             # Put to images tensor (K + 1) * N * dim 
             images_matrix = np.concatenate((support_set, query_set), axis=0)
-            #print(images_matrix.shape)
             images_matrix = images_matrix.reshape((K + 1, N, dim))
-            #print(images_matrix.shape)
+
             
             # Put to labels tensor (K + 1) * N * N
             labels_matrix = np.concatenate((support_set_label, query_set_label), axis=0)
-            #print(labels_matrix.shape)
             labels_matrix = labels_matrix.reshape((K + 1, N, N))
-            #print(labels_matrix.shape)
             
             # Add to batch
             batch_images.append(images_matrix)
             batch_labels.append(labels_matrix)
             
-        #print(np.asarray(batch_images).shape)
-        #print(np.asarray(batch_labels).shape)
-        
         # Format the data and return two matrices, one of flattened images with specified shape
         return batch_images, batch_labels
