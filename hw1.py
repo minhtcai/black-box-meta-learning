@@ -269,7 +269,7 @@ def model_eval(images, labels, model):
 
 def main(config):
     device = torch.device('cuda')
-    writer = SummaryWriter(config.logdir)
+    writer = SummaryWriter(config.logdir + 'K{}_N{}_B{}_S{}_L{}_O{}_R{}'.format(config.num_samples, config.num_classes, config.meta_batch_size, config.training_steps, config.learing_rate, config.optimizer, config.learing_rate))
 
     # Download Omniglot Dataset
     if not os.path.isdir('./omniglot_resized'):
@@ -326,12 +326,12 @@ if __name__=='__main__':
     parser.add_argument('--num_classes', type=int, default=5)
     parser.add_argument('--num_samples', type=int, default=1)
     parser.add_argument('--meta_batch_size', type=int, default=128)
-    parser.add_argument('--logdir', type=str, 
-                        default='run/log')
     parser.add_argument('--training_steps', type=int, default=10000)
     parser.add_argument('--log_every', type=int, default=100)
     parser.add_argument('--model_size', type=int, default=128)
     parser.add_argument('--layer_type', type=str, default='LSTM')
     parser.add_argument('--optimizer', type=str, default='Adam')
     parser.add_argument('--learing_rate', type=float, default=1e-3)
+    parser.add_argument('--logdir', type=str, 
+                        default='run/log/)
     main(parser.parse_args())
