@@ -333,5 +333,5 @@ if __name__=='__main__':
     parser.add_argument('--optimizer', type=str, default='Adam')
     parser.add_argument('--learing_rate', type=float, default=1e-3)
     parser.add_argument('--logdir', type=str, 
-                        default='run/log/)
+                        default='run/log/')
     main(parser.parse_args())
