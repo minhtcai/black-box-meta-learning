@@ -289,9 +289,9 @@ def main(config):
     model.to(torch.double).to(device)
     
     l_rate = config.learing_rate
-    if config.optimizer = 'SGD':
+    if config.optimizer == 'SGD':
         optim = torch.optim.SGD(model.parameters(), lr = l_rate)
-    elif config.optimizer = 'RMSPROP':
+    elif config.optimizer == 'RMSPROP':
         optim = torch.optim.RMSPROP(model.parameters(), lr = l_rate)
     else:
         optim = torch.optim.Adam(model.parameters(), lr = l_rate)
