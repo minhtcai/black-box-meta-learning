@@ -2,7 +2,7 @@ import numpy as np
 import os
 import random
 import torch
-
+from sklearn.utils import shuffle
 
 def get_images(paths, labels, nb_samples=None, shuffle=True):
     """
@@ -142,8 +142,7 @@ class DataGenerator(object):
             # Collect image and labels with K+1 sample for each sampeld class, have shape
             labels_imgs = get_images(sampled_class, labels_encoded, K+1, shuffle=False) # N * (K_+ 1) 
             
-            # Create tensor and load data in support and train
-            
+            # Create tensor and load data in support and train            
             support_set = [] # K * N * dim
             query_set = [] # 1 * N * dim
             support_set_label = [] 
@@ -153,6 +152,8 @@ class DataGenerator(object):
             # support will have shape K * N * dim
             # take first sample of each character batch for the query set
             test_counter = 0
+            # [K+1, N, N]
+            # vector at 0 position and put to query set
             for j in range(len(labels_imgs)): 
                 if j == test_counter:
                     query_set.append(image_file_to_array(labels_imgs[j][1], dim)) 
@@ -162,8 +163,9 @@ class DataGenerator(object):
                     support_set.append(image_file_to_array(labels_imgs[j][1], dim))
                     support_set_label.append(labels_imgs[j][0])
 
-            
-            # Shuffle query set only
+            #print(np.asarray(query_set).shape)
+            #print(np.asarray(support_set).shape)
+            # Shuffle query set only # (3, 3)
             query_set, query_set_label = shuffle(query_set, query_set_label)
             
             # Put to images tensor (K + 1) * N * dim 
@@ -173,11 +175,28 @@ class DataGenerator(object):
             
             # Put to labels tensor (K + 1) * N * N
             labels_matrix = np.concatenate((support_set_label, query_set_label), axis=0)
+            
+            # #### VERIFTY BATCH SHAPE AND LABEL # PASSED
+            # # Set all last value to 9, to later check on, set last vectors of size N, to label 9 at last position  
+            # print('Change last value in label to 9')
+            # print(labels_matrix.shape)
+            # for z in range(len(labels_matrix) - N, len(labels_matrix), 1):
+            #     #print(z)
+            #     labels_matrix[z][N-1] = 9 
+            # #### PASSED
+            
             labels_matrix = labels_matrix.reshape((K + 1, N, N))
+            
+            #### VERIFTY BATCH SHAPE AND LABEL
+            # print('Verify last value of query label set are 9 after reshape')
+            # for i in range(N):
+            #     print(labels_matrix[K][i]) # should be 9
+            #### PASSED
             
             # Add to batch
             batch_images.append(images_matrix)
             batch_labels.append(labels_matrix)
-            
+        #print(np.asarray(batch_images).shape)
+        #print(np.asarray(batch_labels).shape)
         # Format the data and return two matrices, one of flattened images with specified shape
-        return batch_images, batch_labels
+        return torch.FloatTensor(batch_images), torch.FloatTensor(batch_labels)
