@@ -163,8 +163,6 @@ class DataGenerator(object):
                     support_set.append(image_file_to_array(labels_imgs[j][1], dim))
                     support_set_label.append(labels_imgs[j][0])
 
-            #print(np.asarray(query_set).shape)
-            #print(np.asarray(support_set).shape)
             # Shuffle query set only # (3, 3)
             query_set, query_set_label = shuffle(query_set, query_set_label)
             
@@ -176,7 +174,7 @@ class DataGenerator(object):
             # Put to labels tensor (K + 1) * N * N
             labels_matrix = np.concatenate((support_set_label, query_set_label), axis=0)
             
-            # #### VERIFTY BATCH SHAPE AND LABEL # PASSED
+            # #### VERIFTY BATCH SHAPE AND LABEL 
             # # Set all last value to 9, to later check on, set last vectors of size N, to label 9 at last position  
             # print('Change last value in label to 9')
             # print(labels_matrix.shape)
@@ -196,7 +194,6 @@ class DataGenerator(object):
             # Add to batch
             batch_images.append(images_matrix)
             batch_labels.append(labels_matrix)
-        #print(np.asarray(batch_images).shape)
-        #print(np.asarray(batch_labels).shape)
+
         # Format the data and return two matrices, one of flattened images with specified shape
         return torch.FloatTensor(batch_images), torch.FloatTensor(batch_labels)

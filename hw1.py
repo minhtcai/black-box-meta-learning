@@ -13,7 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 class MANN(nn.Module):
 
-    def __init__(self, num_classes, samples_per_class, model_size=128, input_size=784):
+    def __init__(self, num_classes, samples_per_class, model_size=128, input_size=784, use_dnc=False):
         super(MANN, self).__init__()
         
         def initialize_weights(model):
@@ -33,6 +33,7 @@ class MANN(nn.Module):
         initialize_weights(self.layer1)
         initialize_weights(self.layer2)
         
+        self.use_dnc = use_dnc
         self.dnc = DNC(
                        input_size=num_classes + input_size,
                        output_size=num_classes,
@@ -45,7 +46,7 @@ class MANN(nn.Module):
                        read_heads=1,
                        batch_first=True,
                        gpu_id=0,
-                       )
+                       ).to(torch.float)
 
     def forward(self, input_images, input_labels):
         """
@@ -164,14 +165,17 @@ class MANN(nn.Module):
         # print(concatenated[1][41][783:]) 
         # print(concatenated[1][42][783:]) 
         # print(concatenated[1][43][783:]) 
-        
-        # pass data through model and reshape output the [B, K + 1, N, N]
-        output, _ = self.layer1(cat_test)
-        #output, _ = self.layer1(concatenated)
-        output, _ = self.layer2(output)
-        output = torch.reshape(output, (B, K + 1, N, N))
-        #output = output.to(torch.float)
-        #print(output.shape)
+        if self.use_dnc == True:
+        	output, _ = self.dnc(cat_test.float())
+        	return output
+        else:
+	        # pass data through model and reshape output the [B, K + 1, N, N]
+	        output, _ = self.layer1(cat_test)
+	        #output, _ = self.layer1(concatenated)
+	        output, _ = self.layer2(output)
+	        output = torch.reshape(output, (B, K + 1, N, N))
+	        #output = output.to(torch.float)
+	        #print(output.shape)
         
         return output.to(torch.float)
 
@@ -248,7 +252,6 @@ class MANN(nn.Module):
 def train_step(images, labels, model, optim):
     labels = labels.to('cuda')
     images = images.to('cuda')
-    #
     predictions = model(images, labels)
     loss = model.loss_function(predictions, labels)
     
@@ -261,7 +264,6 @@ def train_step(images, labels, model, optim):
 def model_eval(images, labels, model):
     labels = labels.to('cuda')
     images = images.to('cuda')
-    #
     predictions = model(images, labels)
     loss = model.loss_function(predictions, labels)
     return predictions.detach(), loss.detach()
@@ -269,7 +271,7 @@ def model_eval(images, labels, model):
 
 def main(config):
     device = torch.device('cuda')
-    writer = SummaryWriter(config.logdir + 'K{}_N{}_B{}_S{}_L{}_O{}_R{}'.format(config.num_samples, config.num_classes, config.meta_batch_size, config.training_steps, config.learing_rate, config.optimizer, config.learing_rate))
+    writer = SummaryWriter(config.logdir + 'K{}_N{}_B{}_S{}_L{}_O{}_R{}_M{}_D{}'.format(config.num_samples, config.num_classes, config.meta_batch_size, config.training_steps, config.learing_rate, config.optimizer, config.learing_rate, config.model_size, config.dnc))
 
     # Download Omniglot Dataset
     if not os.path.isdir('./omniglot_resized'):
@@ -285,9 +287,11 @@ def main(config):
 
     # Create model and optimizer
     model = MANN(config.num_classes, config.num_samples, 
-                 model_size=config.model_size)
+                 model_size=config.model_size, use_dnc=config.dnc)
     model.to(torch.double).to(device)
-    
+    if config.dnc == True:
+    	model.to(torch.float).to(device)
+
     l_rate = config.learing_rate
     if config.optimizer == 'SGD':
         optim = torch.optim.SGD(model.parameters(), lr = l_rate)
@@ -332,6 +336,7 @@ if __name__=='__main__':
     parser.add_argument('--layer_type', type=str, default='LSTM')
     parser.add_argument('--optimizer', type=str, default='Adam')
     parser.add_argument('--learing_rate', type=float, default=1e-3)
+    parser.add_argument('--dnc', type=bool, default=False)
     parser.add_argument('--logdir', type=str, 
                         default='run/log/')
     main(parser.parse_args())
