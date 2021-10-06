@@ -174,22 +174,7 @@ class DataGenerator(object):
             # Put to labels tensor (K + 1) * N * N
             labels_matrix = np.concatenate((support_set_label, query_set_label), axis=0)
             
-            # #### VERIFTY BATCH SHAPE AND LABEL 
-            # # Set all last value to 9, to later check on, set last vectors of size N, to label 9 at last position  
-            # print('Change last value in label to 9')
-            # print(labels_matrix.shape)
-            # for z in range(len(labels_matrix) - N, len(labels_matrix), 1):
-            #     #print(z)
-            #     labels_matrix[z][N-1] = 9 
-            # #### PASSED
-            
             labels_matrix = labels_matrix.reshape((K + 1, N, N))
-            
-            #### VERIFTY BATCH SHAPE AND LABEL
-            # print('Verify last value of query label set are 9 after reshape')
-            # for i in range(N):
-            #     print(labels_matrix[K][i]) # should be 9
-            #### PASSED
             
             # Add to batch
             batch_images.append(images_matrix)
